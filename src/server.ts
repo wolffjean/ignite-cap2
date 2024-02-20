@@ -1,14 +1,16 @@
 import fastify from 'fastify'
 import { knex } from './database'
-import crypt from 'node:crypto'
+import crypto from 'node:crypto'
 const app = fastify()
 
 app.get('/hello', async () => {
+
+
     const transaction = await knex('transactions')
         .insert({
             id: crypto.randomUUID(),
             title: 'Transação de teste',
-            amout: 1000,
+            amount: 1000,
         })
         .returning('*')
 
