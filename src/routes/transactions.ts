@@ -10,6 +10,64 @@ export async function transactionsRoutes(app: FastifyInstance){
         console.log(`teste`)
     })
 
+    app.put('/:id', 
+    { 
+        preHandler : [checkSessionIdExists]
+    },
+     async (request, reply) => {
+        const { sessionId } = request.cookies
+
+        const getTransactionParamsSchema = z.object({
+            id: z.string()
+        })
+
+        const { id } = getTransactionParamsSchema.parse(request.params)
+
+        const updateTransactionBodySchema = z.object({
+            title: z.string(),
+            amount: z.number(),
+            type: z.enum(['credit','debit']),
+        })
+
+        const { title, amount, type }= updateTransactionBodySchema.parse(request.body)
+
+        await knex('transactions').where({
+            id, 
+            session_id: sessionId
+        }).update(
+            {
+                title,
+                amount: type ==='credit' ? amount: amount * -1
+            }
+        )
+
+            return reply.status(202).send()
+
+    })
+
+
+    app.delete('/:id',
+    { 
+        preHandler : [checkSessionIdExists]
+     },
+    async (request, reply) => {
+        const { sessionId } = request.cookies
+
+        const getTransactionParamsSchema = z.object({
+            id: z.string().uuid()
+        })
+
+        const { id } = getTransactionParamsSchema.parse(request.params)
+
+       await knex('transactions').where({
+            id,
+            session_id: sessionId
+        }).del()
+
+        return reply.status(202).send()
+
+    })
+
     app.get('/summary', 
     { 
        preHandler : [checkSessionIdExists]
